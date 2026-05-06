@@ -1,0 +1,109 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Extended user data tied to Firebase Auth UID",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "currency": { "type": "string", "description": "User preferred currency symbol" },
+        "monthly_budget_limit": { "type": "number", "description": "Global monthly spending limit" }
+      },
+      "required": ["email"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "A single financial transaction",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "description", "amount", "category", "date"]
+    },
+    "Budget": {
+      "title": "Budget",
+      "description": "Monthly limit for a specific category",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "category": { "type": "string" },
+        "monthly_limit": { "type": "number" }
+      },
+      "required": ["userId", "category", "monthly_limit"]
+    },
+    "BankAccount": {
+      "title": "Bank Account",
+      "description": "Linked bank account metadata",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "institution_name": { "type": "string" },
+        "provider": { "type": "string" },
+        "last_synced": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "institution_name"]
+    },
+    "BankTransaction": {
+      "title": "Bank Transaction",
+      "description": "A transaction from a linked bank account",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "accountId": { "type": "string" },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "is_imported": { "type": "boolean" }
+      },
+      "required": ["userId", "accountId", "amount", "description", "date"]
+    },
+    "MonthlyConfig": {
+      "title": "Monthly Configuration",
+      "description": "Period-specific settings like total budget limit",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "month": { "type": "string", "description": "YYYY-MM format" },
+        "total_budget_limit": { "type": "number" },
+        "savings_rate": { "type": "number", "description": "The percentage of income to save (0-50)" }
+      },
+      "required": ["userId", "month", "total_budget_limit"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Metadata for each registered user"
+    },
+    "expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "Global list of all user expenses"
+    },
+    "budgets/{budgetId}": {
+      "schema": "Budget",
+      "description": "Category-specific budget limits"
+    },
+    "monthly_configs/{configId}": {
+      "schema": "MonthlyConfig",
+      "description": "Period-specific global limits and settings"
+    },
+    "bank_accounts/{accountId}": {
+      "schema": "BankAccount",
+      "description": "Linked bank accounts"
+    },
+    "bank_transactions/{transactionId}": {
+      "schema": "BankTransaction",
+      "description": "Transactions from linked banks"
+    },
+    "test/{connection}": {
+      "schema": { "type": "object", "properties": { "status": { "type": "string" } } },
+      "description": "Public collection for connectivity health checks"
+    }
+  }
+}

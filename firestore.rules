@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isDataOwner() {
+      return isSignedIn() && request.auth.uid == request.resource.data.userId;
+    }
+
+    function isExistingOwner() {
+      return isSignedIn() && request.auth.uid == resource.data.userId;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) 
+                    && request.resource.data.keys().hasAll(['email'])
+                    && request.resource.data.email is string;
+      allow update: if isOwner(userId) 
+                    && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['currency', 'monthly_budget_limit', 'email']));
+    }
+
+    // Test connection document
+    match /test/connection {
+      allow get: if true;
+    }
+
+    // Expenses
+    match /expenses/{expenseId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.keys().hasAll(['userId', 'description', 'amount', 'category', 'date'])
+                    && request.resource.data.amount is number
+                    && request.resource.data.description.size() <= 200;
+      allow update: if isExistingOwner() && isDataOwner()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['description', 'amount', 'category', 'date', 'updatedAt']);
+      allow delete: if isExistingOwner();
+    }
+
+    // Budgets
+    match /budgets/{budgetId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid
+                    && (request.resource.data.keys().hasAll(['userId', 'category', 'monthly_limit', 'month']))
+                    && request.resource.data.monthly_limit is number;
+      allow update: if isExistingOwner() && isDataOwner()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['category', 'monthly_limit', 'month']);
+      allow delete: if isExistingOwner();
+    }
+
+    // Monthly Configs
+    match /monthly_configs/{configId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.keys().hasAll(['userId', 'month', 'total_budget_limit'])
+                    && request.resource.data.total_budget_limit is number
+                    && (request.resource.data.get('savings_rate', 0) is number);
+      allow update: if isExistingOwner() && isDataOwner()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasAny(['total_budget_limit', 'savings_rate'])
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['total_budget_limit', 'savings_rate']);
+      allow delete: if isExistingOwner();
+    }
+
+    // Bank Accounts
+    match /bank_accounts/{accountId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.keys().hasAll(['userId', 'institution_name'])
+                    && request.resource.data.userId is string
+                    && request.resource.data.institution_name is string
+                    && request.resource.data.institution_name.size() <= 100;
+      allow update: if isExistingOwner() && isDataOwner()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['last_synced', 'institution_name']);
+      allow delete: if isExistingOwner();
+    }
+
+    // Bank Transactions
+    match /bank_transactions/{transactionId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.keys().hasAll(['userId', 'accountId', 'amount', 'description', 'date'])
+                    && request.resource.data.userId is string
+                    && request.resource.data.amount is number
+                    && request.resource.data.description is string;
+      allow update: if isExistingOwner() && isDataOwner()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['is_imported', 'category']);
+      allow delete: if isExistingOwner();
+    }
+  }
+}

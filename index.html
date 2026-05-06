@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Prevent libraries from overriding window.fetch which is read-only in some environments
+      (function() {
+        const originalFetch = window.fetch;
+        if (!originalFetch) return;
+        
+        const protect = (obj, prop) => {
+          try {
+            const desc = Object.getOwnPropertyDescriptor(obj, prop);
+            if (desc && !desc.configurable) {
+              console.warn('Property ' + prop + ' is not configurable, cannot protect it directly.');
+              return;
+            }
+            Object.defineProperty(obj, prop, {
+              get() { return originalFetch; },
+              set(v) { 
+                console.warn('Attempt to override ' + prop + ' blocked', v);
+              },
+              configurable: true,
+              enumerable: true
+            });
+          } catch (e) {
+            console.error('Failed to protect ' + prop, e);
+          }
+        };
+        
+        protect(window, 'fetch');
+        if (typeof globalThis !== 'undefined') {
+          protect(globalThis, 'fetch');
+        }
+      })();
+    </script>
+    <title>FinanceAI</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
