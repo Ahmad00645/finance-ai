@@ -10,7 +10,7 @@ async function callApi(url: string, body: object) {
 
 export const scanReceipt = async (base64Data: string, mimeType: string) => {
   try {
-    const data = await callApi('/api/gemini', { action: 'scanReceipt', base64Data, mimeType });
+    const data = await callApi('/api/mistral', { action: 'scanReceipt', base64Data, mimeType });
     return data ?? null;
   } catch (e) {
     console.error('Receipt scanning failed', e);
