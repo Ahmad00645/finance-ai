@@ -8,7 +8,6 @@ async function callApi(url: string, body: object) {
   return res.json();
 }
 
-// scanReceipt uses Gemini (vision required)
 export const scanReceipt = async (base64Data: string, mimeType: string) => {
   try {
     const data = await callApi('/api/gemini', { action: 'scanReceipt', base64Data, mimeType });
@@ -19,10 +18,9 @@ export const scanReceipt = async (base64Data: string, mimeType: string) => {
   }
 };
 
-// Text-only features use Groq
 export const getAIInsights = async (expenses: any[], budgets: any[]) => {
   try {
-    const data = await callApi('/api/groq', { action: 'getAIInsights', expenses, budgets });
+    const data = await callApi('/api/gemini', { action: 'getAIInsights', expenses, budgets });
     return data.insights ?? ['Track your expenses regularly for better insights.'];
   } catch {
     return ['AI Insights currently unavailable. Check your spending distribution in Analytics.'];
@@ -31,7 +29,7 @@ export const getAIInsights = async (expenses: any[], budgets: any[]) => {
 
 export const categorizeExpense = async (description: string) => {
   try {
-    const data = await callApi('/api/groq', { action: 'categorizeExpense', description });
+    const data = await callApi('/api/gemini', { action: 'categorizeExpense', description });
     return data.category ?? 'Other';
   } catch (e) {
     console.error('AI Categorization failed', e);
@@ -45,7 +43,7 @@ export const getChatResponse = async (
   context?: any
 ) => {
   try {
-    const data = await callApi('/api/groq', { action: 'chat', message, history, context });
+    const data = await callApi('/api/gemini', { action: 'chat', message, history, context });
     return data.text ?? "I'm sorry, I'm having trouble connecting right now. Please try again.";
   } catch (e) {
     console.error('Chat failed', e);
