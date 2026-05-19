@@ -4,7 +4,7 @@ import { GoogleGenAI, Type } from '@google/genai';
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 // Centralized model naming — change it here to swap models instantly!
-const CHOSEN_MODEL = 'gemini-2.0-flash-lite';
+const CHOSEN_MODEL = 'gemini-2.0-flash';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -42,8 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         let text = (response.text ?? '').trim();
         if (text.includes('```')) {
-          const match = text.match(/
-```(?:json)?\s*([\s\S]*?)\s*```/);
+          const match = /```(?:json)?\s*([\s\S]*?)\s*```/.exec(text);
           if (match?.[1]) text = match[1].trim();
         }
         text = text.replace(/:\s*undefined\b/g, ': null');
