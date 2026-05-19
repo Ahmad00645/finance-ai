@@ -15,7 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'scanReceipt': {
         const { base64Data, mimeType } = req.body;
         const response = await ai.models.generateContent({
-          model: 'gemini-2.0-flash',
+          model: 'gemini-1.5-flash',
           contents: [
             { inlineData: { data: base64Data, mimeType } },
             {
